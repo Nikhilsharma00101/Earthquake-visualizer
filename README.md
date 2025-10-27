@@ -6,6 +6,7 @@ It displays real-time global earthquake data using the USGS Earthquake API, allo
 ## Overview
 
 This project was developed as part of a UI development challenge to demonstrate front-end skills in React, data visualization, and clean UI/UX design.  
+
 The app focuses on simplicity, clarity, and responsiveness while handling real-time geospatial data effectively.
 
 ## Tech Stack
