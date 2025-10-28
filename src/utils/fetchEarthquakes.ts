@@ -4,6 +4,7 @@ export interface EarthquakeFeature {
     place: string;
     mag: number;
     time: number;
+    url: string;
   };
   geometry: {
     coordinates: [number, number, number]; // [lon, lat, depth]
