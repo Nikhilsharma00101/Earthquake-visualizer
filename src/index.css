@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Leaflet map rendering */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #dfe7ef;
+}
+
+/* Optional – nice scroll and smoother visuals */
+body {
+  @apply bg-gray-900 text-white;
+}
