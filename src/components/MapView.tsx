@@ -5,20 +5,21 @@ import {
   Popup,
   ZoomControl,
   LayersControl,
+  useMap,
 } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3";
 import { motion } from "framer-motion";
-import { memo, useMemo } from "react";
+import { memo, useMemo, useEffect } from "react";
 import type { EarthquakeFeature } from "../utils/fetchEarthquakes";
 import "leaflet/dist/leaflet.css";
+import "leaflet.heat";
 import "../styles/cluster.css";
 
 interface MapViewProps {
   earthquakes: EarthquakeFeature[];
 }
 
-// Utility for readable time difference
+// Utility: readable time difference
 const timeAgo = (timestamp: number): string => {
   const diff = Date.now() - timestamp;
   const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -36,14 +37,42 @@ const getColor = (mag: number): string => {
   return "#22c55e"; // green
 };
 
+// ✅ Native Heatmap Layer (Leaflet.heat)
+function HeatmapLayer({ points }: { points: [number, number, number][] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!map) return;
+    // @ts-ignore - leaflet.heat adds L.heatLayer globally
+    const heat = (window as any).L.heatLayer(points, {
+      radius: 25,
+      blur: 18,
+      maxZoom: 10,
+      minOpacity: 0.4,
+      gradient: {
+        0.2: "#22c55e",
+        0.4: "#facc15",
+        0.6: "#f97316",
+        0.8: "#ef4444",
+      },
+    }).addTo(map);
+
+    return () => {
+      map.removeLayer(heat);
+    };
+  }, [map, points]);
+
+  return null;
+}
+
 function MapView({ earthquakes }: MapViewProps) {
-  //  Memoize computed points to avoid recalculating on re-renders
-  const heatmapPoints = useMemo(
+  // Prepare heatmap points
+  const heatmapPoints = useMemo<[number, number, number][]>(
     () =>
       earthquakes.map((quake) => {
         const [lon, lat] = quake.geometry.coordinates;
         const mag = quake.properties.mag || 0;
-        return { lat, lng: lon, intensity: mag };
+        return [lat, lon, mag / 10]; // normalize intensity
       }),
     [earthquakes]
   );
@@ -54,7 +83,7 @@ function MapView({ earthquakes }: MapViewProps) {
       role="region"
       aria-label="Interactive global earthquake map"
     >
-      {/*  Magnitude Meter */}
+      {/* Magnitude Legend */}
       <div
         className="absolute top-4 left-4 z-[1000] bg-white/40 backdrop-blur-md rounded-xl shadow-md px-4 py-2 border border-white/30"
         aria-label="Magnitude intensity legend"
@@ -67,7 +96,6 @@ function MapView({ earthquakes }: MapViewProps) {
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={6}
-          aria-label="Earthquake magnitude color scale"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-yellow-400 via-orange-500 to-red-600" />
         </div>
@@ -79,7 +107,6 @@ function MapView({ earthquakes }: MapViewProps) {
         </div>
       </div>
 
-      {/*  Map */}
       <MapContainer
         center={[20, 0]}
         zoom={3}
@@ -88,11 +115,9 @@ function MapView({ earthquakes }: MapViewProps) {
         scrollWheelZoom
         zoomControl={false}
         className="h-full w-full z-0"
-        aria-label="Earthquake map visualization"
       >
         <ZoomControl position="bottomright" />
 
-        {/* Layers Control (animated dropdown) */}
         <motion.div
           className="absolute top-4 right-4 z-[1000] rounded-2xl backdrop-blur-xl bg-white/60 dark:bg-gray-900/60 shadow-lg border border-gray-300/30 dark:border-gray-700/30 overflow-hidden"
           initial={{ opacity: 0, y: -10 }}
@@ -129,17 +154,7 @@ function MapView({ earthquakes }: MapViewProps) {
 
             {/* Heatmap Layer */}
             <LayersControl.Overlay checked name="Heat Intensity Map">
-              <HeatmapLayer
-                points={heatmapPoints}
-                longitudeExtractor={(p) => p.lng}
-                latitudeExtractor={(p) => p.lat}
-                intensityExtractor={(p) => p.intensity}
-                radius={20}
-                blur={18}
-                max={6}
-                fitBoundsOnLoad
-                fitBoundsOnUpdate
-              />
+              <HeatmapLayer points={heatmapPoints} />
             </LayersControl.Overlay>
 
             {/* Cluster Markers */}
@@ -224,5 +239,4 @@ function MapView({ earthquakes }: MapViewProps) {
   );
 }
 
-// Memoized to prevent unnecessary re-renders when props are unchanged
 export default memo(MapView);
