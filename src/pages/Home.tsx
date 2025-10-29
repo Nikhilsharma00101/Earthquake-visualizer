@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import MapView from "../components/MapView";
-import EarthquakeGlobe from "../components/EarthquakeGlobe";
-import ToggleView from "../components/ToggleView";
 import { fetchEarthquakes, type EarthquakeFeature } from "../utils/fetchEarthquakes";
 
 export default function Home() {
   const [earthquakes, setEarthquakes] = useState<EarthquakeFeature[]>([]);
   const [loading, setLoading] = useState(true);
-  const [is3D, setIs3D] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      const data = await fetchEarthquakes();
+      const data = await fetchEarthquakes(); 
       setEarthquakes(data);
       setLoading(false);
     }
@@ -28,7 +25,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center">
-      <header className="py-8 text-center">
+      <header className="py-8 text-center z-[1001]">
         <h1 className="text-4xl font-extrabold tracking-wide mb-2 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text">
           Earthquake Visualizer 🌎
         </h1>
@@ -37,17 +34,11 @@ export default function Home() {
         </p>
       </header>
 
-      <ToggleView is3D={is3D} onToggle={() => setIs3D(!is3D)} />
-
-      <main className="p-6 w-11/12 max-w-6xl">
-        {is3D ? (
-          <EarthquakeGlobe earthquakes={earthquakes} />
-        ) : (
-          <MapView earthquakes={earthquakes} />
-        )}
+      <main className="relative z-[1000] p-6 w-11/12 max-w-6xl">
+        <MapView earthquakes={earthquakes} />
       </main>
 
-      <footer className="text-gray-500 text-xs py-4">
+      <footer className="text-gray-500 text-xs py-4 z-[1001]">
         Data source:{" "}
         <a
           href="https://earthquake.usgs.gov"
