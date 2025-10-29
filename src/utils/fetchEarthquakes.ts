@@ -19,10 +19,15 @@ export interface EarthquakeFeature {
   };
 }
 
-export async function fetchEarthquakes(): Promise<EarthquakeFeature[]> {
+// ⏱️ Supported time ranges
+export type TimeRange = "hour" | "day" | "week" | "month";
+
+export async function fetchEarthquakes(
+  timeRange: TimeRange = "day"
+): Promise<EarthquakeFeature[]> {
   try {
     const res = await fetch(
-      "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
+      `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_${timeRange}.geojson`
     );
 
     if (!res.ok) throw new Error("Failed to fetch earthquake data");

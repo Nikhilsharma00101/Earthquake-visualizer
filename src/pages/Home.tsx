@@ -1,24 +1,73 @@
 import { useEffect, useState } from "react";
 import MapView from "../components/MapView";
 import EarthquakeStats from "../components/EarthquakeStats";
-import { fetchEarthquakes } from "../utils/fetchEarthquakes";
-import type { EarthquakeFeature } from "../utils/fetchEarthquakes";
+import {
+  fetchEarthquakes,
+  type EarthquakeFeature,
+  type TimeRange,
+} from "../utils/fetchEarthquakes";
 import LiveEarthquakeFeed from "../components/LiveEarthquakeFeed";
 import EarthquakeCharts from "../components/EarthquakeCharts";
-
+import FilterPanel from "../components/FilterPanel";
 
 export default function Home() {
   const [earthquakes, setEarthquakes] = useState<EarthquakeFeature[]>([]);
+  const [filteredQuakes, setFilteredQuakes] = useState<EarthquakeFeature[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [timeRange, setTimeRange] = useState<TimeRange>("day");
+  const [magnitudeRange, setMagnitudeRange] = useState<string>("All Magnitudes");
+
+  // Fetch data based on selected time range
   useEffect(() => {
     async function loadData() {
-      const data = await fetchEarthquakes();
+      setLoading(true);
+      const data = await fetchEarthquakes(timeRange);
       setEarthquakes(data);
+      setFilteredQuakes(data);
       setLoading(false);
     }
     loadData();
-  }, []);
+  }, [timeRange]);
+
+  // Handle filter changes
+  const handleFilterChange = (filters: {
+    minMag: number | null;
+    maxMag: number | null;
+    timeRange: TimeRange;
+  }) => {
+    setTimeRange(filters.timeRange);
+
+    const filtered = earthquakes.filter((quake) => {
+      const mag = quake.properties.mag;
+      const min = filters.minMag ?? -Infinity;
+      const max = filters.maxMag ?? Infinity;
+      return mag >= min && mag <= max;
+    });
+
+    // Label for charts heading
+    if (filters.minMag !== null || filters.maxMag !== null) {
+      const label =
+        filters.minMag !== null && filters.maxMag !== null
+          ? `${filters.minMag}–${filters.maxMag}`
+          : filters.minMag !== null
+          ? `${filters.minMag}+`
+          : filters.maxMag !== null
+          ? `<${filters.maxMag}`
+          : "All Magnitudes";
+      setMagnitudeRange(label);
+    } else {
+      setMagnitudeRange("All Magnitudes");
+    }
+
+    setFilteredQuakes(filtered);
+  };
+
+  const handleReset = () => {
+    setFilteredQuakes(earthquakes);
+    setTimeRange("day");
+    setMagnitudeRange("All Magnitudes");
+  };
 
   if (loading) {
     return (
@@ -30,10 +79,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-black to-[#050505] text-gray-100 flex flex-col items-center">
-      {/* Live Earthquake Feed */}
+      {/* 🌐 Live Feed */}
       <LiveEarthquakeFeed />
 
-      {/* Header */}
+      {/* 🪧 Header */}
       <header className="pt-20 pb-10 text-center z-[1001] max-w-3xl mx-auto">
         <h1 className="text-3xl md:text-5xl font-extrabold tracking-wide mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
           Earthquake Visualizer
@@ -44,7 +93,18 @@ export default function Home() {
         </p>
       </header>
 
-      {/* Map Section */}
+      {/* 🎚️ Filter Panel */}
+      <div className="w-11/12 max-w-5xl mb-6">
+        <FilterPanel
+          minMag={null}
+          maxMag={null}
+          timeRange={timeRange}
+          onFilterChange={handleFilterChange}
+          onReset={handleReset}
+        />
+      </div>
+
+      {/* 🗺️ Map Section */}
       <main className="relative z-[1000] p-6 w-11/12 max-w-7xl text-center">
         <h2 className="text-2xl font-semibold mb-3 text-gray-100">
           Live Global Seismic Map
@@ -54,24 +114,31 @@ export default function Home() {
           marker to reveal location, magnitude, and time of occurrence.
         </p>
         <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-700">
-          <MapView earthquakes={earthquakes} />
+          <MapView earthquakes={filteredQuakes} />
         </div>
       </main>
 
-      {/* Stats Section */}
+      {/* 📊 Stats Section */}
       <section className="relative z-[1001] w-11/12 max-w-5xl mt-12 mb-10">
         <h2 className="text-2xl font-semibold mb-3 text-gray-100 text-center">
           Earthquake Analytics Overview
         </h2>
         <p className="text-gray-300 text-sm text-center mb-6 max-w-2xl mx-auto">
-          A summary of global seismic activity from the past 24 hours — including
-          frequency, average magnitude, and intensity distribution.
+          A summary of global seismic activity — including frequency, average
+          magnitude, and intensity distribution.
         </p>
-        <EarthquakeStats earthquakes={earthquakes} />
+        <EarthquakeStats earthquakes={filteredQuakes} />
       </section>
 
-      {/* Info Panel */}
-      <section className="max-w-5xl w-11/12 mb-10">
+      {/* 📈 Charts Section */}
+      <EarthquakeCharts
+        earthquakes={filteredQuakes}
+        timeRange={timeRange}
+        magnitudeRange={magnitudeRange}
+      />
+
+      {/* 🌍 Info Section */}
+       <section className="max-w-5xl w-11/12 mb-10">
         <div className="bg-gray-900/60 backdrop-blur-lg border border-gray-700 rounded-2xl p-8 shadow-2xl text-center">
           <h2 className="text-2xl font-semibold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
             Understanding Earth&apos;s Movements
@@ -116,11 +183,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Charts Section */}
-      <EarthquakeCharts earthquakes={earthquakes} />
-
-
-      {/* Footer */}
+      {/* 🧭 Footer */}
       <footer className="text-gray-300 text-xs py-6 z-[1001] text-center border-t border-gray-700 w-full">
         Data sourced from{" "}
         <a
