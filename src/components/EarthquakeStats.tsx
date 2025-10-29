@@ -1,17 +1,19 @@
 import { useState, useMemo } from "react";
 import type { EarthquakeFeature } from "../utils/fetchEarthquakes";
 import FilterPanel from "./FilterPanel";
+import EarthquakeModal from "./EarthquakeModal";
 
 interface EarthquakeStatsProps {
   earthquakes: EarthquakeFeature[];
 }
 
 export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
-  // Filter states
   const [filters, setFilters] = useState<{ minMag: number | null; maxMag: number | null }>({
     minMag: null,
     maxMag: null,
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedQuake, setSelectedQuake] = useState<EarthquakeFeature | null>(null);
 
   const handleFilterChange = (newFilters: { minMag: number | null; maxMag: number | null }) => {
     setFilters(newFilters);
@@ -23,7 +25,6 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
     setCurrentPage(1);
   };
 
-  // Filtered earthquakes
   const filteredEarthquakes = useMemo(() => {
     return earthquakes.filter((e) => {
       const mag = e.properties.mag;
@@ -40,8 +41,6 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
     ? (magnitudes.reduce((a, b) => a + b, 0) / total).toFixed(2)
     : "0.00";
 
-  // Pagination setup
-  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(total / itemsPerPage);
   const currentData = filteredEarthquakes.slice(
@@ -49,10 +48,8 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
     currentPage * itemsPerPage
   );
 
-  // Intensity meter percentage (scaled 0–10)
   const intensity = Math.min((maxMag / 10) * 100, 100);
 
-  // Format timestamp → human readable
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     return date.toLocaleString("en-US", {
@@ -65,30 +62,17 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
   };
 
   return (
-    <div className="bg-gray-800/40 backdrop-blur-lg border border-gray-700 rounded-2xl p-6 shadow-2xl text-white">
-      <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-        Earthquake Statistics (Past 24 Hours)
-      </h2>
+    <div className="relative bg-black border border-gray-700 rounded-2xl p-6 shadow-2xl text-white">
+      <h2 className="text-2xl font-bold mb-4">Earthquake Statistics (Past 24 Hours)</h2>
 
-      {/*  Filter Panel */}
+      {/* Filter Panel */}
       <FilterPanel onFilterChange={handleFilterChange} onReset={handleReset} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-4 text-center">
-          <p className="text-gray-400 text-sm">Total Earthquakes</p>
-          <h3 className="text-3xl font-bold text-blue-400">{total}</h3>
-        </div>
-
-        <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-4 text-center">
-          <p className="text-gray-400 text-sm">Average Magnitude</p>
-          <h3 className="text-3xl font-bold text-yellow-400">{avgMag}</h3>
-        </div>
-
-        <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-4 text-center">
-          <p className="text-gray-400 text-sm">Strongest Magnitude</p>
-          <h3 className="text-3xl font-bold text-red-400">{maxMag}</h3>
-        </div>
+        <StatCard label="Total Earthquakes" value={total} color="text-blue-400" />
+        <StatCard label="Average Magnitude" value={avgMag} color="text-yellow-400" />
+        <StatCard label="Strongest Magnitude" value={maxMag} color="text-red-400" />
       </div>
 
       {/* Intensity Meter */}
@@ -119,15 +103,13 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
               <th className="py-3 px-4 text-center">Lon</th>
               <th className="py-3 px-4 text-center">Felt</th>
               <th className="py-3 px-4 text-center">CDI</th>
-              <th className="py-3 px-4 text-center">Link</th>
+              <th className="py-3 px-4 text-center">Details</th>
             </tr>
           </thead>
           <tbody>
             {currentData.map((quake) => {
               const [lon, lat, depth] = quake.geometry.coordinates;
-              const { mag, place, time, url } = quake.properties;
-              const felt: number | null = (quake.properties as any).felt ?? null;
-              const cdi: number | null = (quake.properties as any).cdi ?? null;
+              const { mag, place, time, felt, cdi } = quake.properties;
 
               return (
                 <tr
@@ -155,14 +137,12 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
                   <td className="py-3 px-4 text-center">{felt ?? "-"}</td>
                   <td className="py-3 px-4 text-center">{cdi ?? "-"}</td>
                   <td className="py-3 px-4 text-center">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:underline"
+                    <button
+                      onClick={() => setSelectedQuake(quake)}
+                      className="text-blue-400 hover:underline font-medium"
                     >
-                      View ↗
-                    </a>
+                      More Details
+                    </button>
                   </td>
                 </tr>
               );
@@ -199,10 +179,35 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
         <strong>Note:</strong> <br />
         <span className="text-gray-400">
           <strong>Felt</strong> = Number of people who reported feeling the earthquake. <br />
-          <strong>CDI (Community Determined Intensity)</strong> = A measure of perceived shaking
-          intensity, calculated from felt reports on the USGS "Did You Feel It?" system.
+          <strong>CDI (Community Determined Intensity)</strong> = Measure of perceived shaking
+          intensity from USGS "Did You Feel It?" reports.
         </span>
       </p>
+
+      {/* 🟦 Right-side Earthquake Modal */}
+      {selectedQuake && (
+        <>
+          {/* Overlay */}
+          <div
+            onClick={() => setSelectedQuake(null)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99]"
+          />
+          {/* Right Drawer Modal */}
+          <div className="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-gray-900 border-l border-gray-700 z-[100] shadow-2xl">
+            <EarthquakeModal quake={selectedQuake} onClose={() => setSelectedQuake(null)} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** Reusable Stat Card */
+function StatCard({ label, value, color }: { label: string; value: string | number; color: string }) {
+  return (
+    <div className="bg-gray-900/60 border border-gray-700 rounded-xl p-4 text-center">
+      <p className="text-white text-sm">{label}</p>
+      <h3 className={`text-3xl font-bold ${color}`}>{value}</h3>
     </div>
   );
 }
