@@ -37,8 +37,9 @@ export default function FilterPanel({
   };
 
   return (
-    <div className="bg-gray-900/60 border border-gray-700 p-4 rounded-xl mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="bg-gray-900/70 border border-gray-700 p-5 rounded-xl mb-6 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-5 shadow-md backdrop-blur-md">
+      {/* Input Controls Section */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full lg:w-auto">
         {/* Min Magnitude */}
         <div className="flex flex-col">
           <label className="text-gray-400 text-sm mb-1">Min Magnitude</label>
@@ -46,9 +47,11 @@ export default function FilterPanel({
             type="number"
             step="0.1"
             value={localMin}
-            onChange={(e) => setLocalMin(e.target.value === "" ? "" : parseFloat(e.target.value))}
+            onChange={(e) =>
+              setLocalMin(e.target.value === "" ? "" : parseFloat(e.target.value))
+            }
             placeholder="e.g. 3.5"
-            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -59,9 +62,11 @@ export default function FilterPanel({
             type="number"
             step="0.1"
             value={localMax}
-            onChange={(e) => setLocalMax(e.target.value === "" ? "" : parseFloat(e.target.value))}
+            onChange={(e) =>
+              setLocalMax(e.target.value === "" ? "" : parseFloat(e.target.value))
+            }
             placeholder="e.g. 7.0"
-            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -77,7 +82,7 @@ export default function FilterPanel({
                 timeRange: e.target.value as "hour" | "day" | "week" | "month",
               })
             }
-            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="hour">Past Hour</option>
             <option value="day">Past 24 Hours</option>
@@ -87,17 +92,17 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex gap-3">
+      {/* Buttons Section */}
+      <div className="flex flex-col sm:flex-row justify-end gap-3 w-full lg:w-auto">
         <button
           onClick={handleApply}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition w-full sm:w-auto"
         >
           Apply
         </button>
         <button
           onClick={handleReset}
-          className="bg-gray-700 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-md transition"
+          className="bg-gray-700 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-md transition w-full sm:w-auto"
         >
           Reset
         </button>
