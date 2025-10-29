@@ -12,6 +12,8 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"), // Simplifies imports using "@/..."
     },
+    // 👇 Added: prevent duplicate React / scheduler instances
+    dedupe: ["react", "react-dom", "scheduler"],
   },
 
   build: {
@@ -63,7 +65,6 @@ export default defineConfig({
   },
 
   optimizeDeps: {
-    // Pre-bundle frequently used libraries to speed up dev startup
     include: [
       "react",
       "react-dom",
