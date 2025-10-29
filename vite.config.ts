@@ -4,8 +4,11 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
 
+  resolve: {
+    dedupe: ["react", "react-dom", "scheduler"], // ✅ This is critical!
+  },
+
   build: {
-    //  Helps split large libraries into separate chunks
     rollupOptions: {
       output: {
         manualChunks: {
@@ -14,7 +17,5 @@ export default defineConfig({
         },
       },
     },
-
-    
   },
 });
