@@ -45,6 +45,23 @@ Where `${timeRange}` can be:
 
 ---
 
+---
+
+## 🗺️ Map Tiles & API Key
+
+This project uses **MapTiler** as the base map provider for rendering 2D map tiles in **React-Leaflet**.  
+To display maps correctly, you’ll need a **free MapTiler API key**.
+
+### 🔑 How to Get Your MapTiler API Key
+
+1. Go to [https://cloud.maptiler.com](https://cloud.maptiler.com).
+2. Create a free account or log in.
+3. From your dashboard, copy your **API key**.
+4. Create a `.env` file in the root directory and add:
+   ```bash
+   VITE_MAPTILER_KEY=your_api_key_here
+
+
 ## 🚀 Getting Started
 
 Follow these steps to set up and run the project locally:
