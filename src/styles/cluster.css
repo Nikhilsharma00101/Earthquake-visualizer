@@ -1,0 +1,29 @@
+/* Custom cluster styling for cleaner, modern-looking grouped earthquake markers. */
+/* used a separate cluster.css because the marker-cluster plugin uses Leaflet’s classes, which can’t be styled directly with Tailwind utilities. */
+
+.marker-cluster-small {
+  background-color: rgba(122, 245, 6, 0.6);
+  border-radius: 50px;
+}
+.marker-cluster-medium {
+  background-color: rgba(227, 198, 30, 0.971);
+  border-radius: 50px;
+}
+.marker-cluster-large {
+  background-color: rgb(244, 72, 72);
+  border-radius: 50px;
+}
+.marker-cluster div {
+  width: 30px;
+  height: 30px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 50%;
+  text-align: center;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+}
