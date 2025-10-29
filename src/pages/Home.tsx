@@ -4,6 +4,8 @@ import EarthquakeStats from "../components/EarthquakeStats";
 import { fetchEarthquakes } from "../utils/fetchEarthquakes";
 import type { EarthquakeFeature } from "../utils/fetchEarthquakes";
 import LiveEarthquakeFeed from "../components/LiveEarthquakeFeed";
+import EarthquakeCharts from "../components/EarthquakeCharts";
+
 
 export default function Home() {
   const [earthquakes, setEarthquakes] = useState<EarthquakeFeature[]>([]);
@@ -113,6 +115,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Charts Section */}
+      <EarthquakeCharts earthquakes={earthquakes} />
+
 
       {/* Footer */}
       <footer className="text-gray-300 text-xs py-6 z-[1001] text-center border-t border-gray-700 w-full">
