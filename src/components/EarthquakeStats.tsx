@@ -1,21 +1,50 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { EarthquakeFeature } from "../utils/fetchEarthquakes";
+import FilterPanel from "./FilterPanel";
 
 interface EarthquakeStatsProps {
   earthquakes: EarthquakeFeature[];
 }
 
 export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
-  const total = earthquakes.length;
-  const magnitudes = earthquakes.map((e) => e.properties.mag);
-  const maxMag = Math.max(...magnitudes);
-  const avgMag = (magnitudes.reduce((a, b) => a + b, 0) / total).toFixed(2);
+  // Filter states
+  const [filters, setFilters] = useState<{ minMag: number | null; maxMag: number | null }>({
+    minMag: null,
+    maxMag: null,
+  });
+
+  const handleFilterChange = (newFilters: { minMag: number | null; maxMag: number | null }) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
+
+  const handleReset = () => {
+    setFilters({ minMag: null, maxMag: null });
+    setCurrentPage(1);
+  };
+
+  // Filtered earthquakes
+  const filteredEarthquakes = useMemo(() => {
+    return earthquakes.filter((e) => {
+      const mag = e.properties.mag;
+      if (filters.minMag !== null && mag < filters.minMag) return false;
+      if (filters.maxMag !== null && mag > filters.maxMag) return false;
+      return true;
+    });
+  }, [earthquakes, filters]);
+
+  const total = filteredEarthquakes.length;
+  const magnitudes = filteredEarthquakes.map((e) => e.properties.mag);
+  const maxMag = magnitudes.length ? Math.max(...magnitudes) : 0;
+  const avgMag = magnitudes.length
+    ? (magnitudes.reduce((a, b) => a + b, 0) / total).toFixed(2)
+    : "0.00";
 
   // Pagination setup
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(total / itemsPerPage);
-  const currentData = earthquakes.slice(
+  const currentData = filteredEarthquakes.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -40,6 +69,9 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
       <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
         Earthquake Statistics (Past 24 Hours)
       </h2>
+
+      {/*  Filter Panel */}
+      <FilterPanel onFilterChange={handleFilterChange} onReset={handleReset} />
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -94,8 +126,6 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
             {currentData.map((quake) => {
               const [lon, lat, depth] = quake.geometry.coordinates;
               const { mag, place, time, url } = quake.properties;
-
-              // Optional properties — prevent TS errors
               const felt: number | null = (quake.properties as any).felt ?? null;
               const cdi: number | null = (quake.properties as any).cdi ?? null;
 
@@ -152,8 +182,7 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
         </button>
 
         <span className="text-gray-400 text-sm">
-          Page <span className="text-white font-semibold">{currentPage}</span> of{" "}
-          {totalPages}
+          Page <span className="text-white font-semibold">{currentPage}</span> of {totalPages}
         </span>
 
         <button
@@ -169,11 +198,9 @@ export default function EarthquakeStats({ earthquakes }: EarthquakeStatsProps) {
       <p className="text-xs text-gray-500 mt-6 border-t border-gray-700 pt-4 leading-relaxed">
         <strong>Note:</strong> <br />
         <span className="text-gray-400">
-          <strong>Felt</strong> = Number of people who reported feeling the
-          earthquake. <br />
-          <strong>CDI (Community Determined Intensity)</strong> = A measure of
-          perceived shaking intensity, calculated from felt reports on the USGS
-          "Did You Feel It?" system.
+          <strong>Felt</strong> = Number of people who reported feeling the earthquake. <br />
+          <strong>CDI (Community Determined Intensity)</strong> = A measure of perceived shaking
+          intensity, calculated from felt reports on the USGS "Did You Feel It?" system.
         </span>
       </p>
     </div>
